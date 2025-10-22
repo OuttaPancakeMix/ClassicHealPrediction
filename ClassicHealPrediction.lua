@@ -4,6 +4,10 @@ local ADDON_VERSION = string.match(GetAddOnMetadata(ADDON_NAME, "Version"), "^v(
 local HealComm = LibStub("LibHealComm-4.0")
 local HealComm_OVERTIME_HEALS = bit.bor(HealComm.HOT_HEALS, HealComm.CHANNEL_HEALS)
 
+ClassicHealPredictionFrame_OnLoad = ClassicHealPredictionFrame_OnLoad or function() end
+ClassicHealPredictionFrame_OnEvent = ClassicHealPredictionFrame_OnEvent or function() end
+
+
 local assert = assert
 local bit = bit
 local format = format
@@ -32,11 +36,12 @@ local PetFrame = PetFrame
 local TargetFrame = TargetFrame
 local TargetFrameToT = TargetFrameToT
 local FocusFrame = FocusFrame
-local PartyMemberFrame = {}
+PartyMemberFrame = {}
 local PartyMemberFramePetFrame = {}
 
 for i = 1, MAX_PARTY_MEMBERS do
     PartyMemberFrame[i] = _G["PartyMemberFrame" .. i]
+
     PartyMemberFramePetFrame[i] = _G["PartyMemberFrame" .. i .. "PetFrame"]
 end
 
@@ -226,8 +231,25 @@ local function getOtherEndTime()
 end
 
 local function getChild(frame, ...)
-    for i = 1, select("#", ...) do
-        frame = select(select(i, ...), frame:GetChildren())
+    if not frame or type(frame.GetChildren) ~= "function" then
+        print("getChild: Invalid frame or missing GetChildren")
+        return frame
+    end
+
+    local path = {...}
+
+    for step, index in ipairs(path) do
+        local children = { frame:GetChildren() }
+
+        if not children[index] then
+            print(string.format(
+                "getChild: No child at index %d at step %d (found %d children)",
+                index, step, #children
+            ))
+            return frame
+        end
+
+        frame = children[index]
     end
 
     return frame
@@ -1410,7 +1432,7 @@ local function ClassicHealPredictionFrame_Refresh()
     end
 end
 
-local function ClassicHealPredictionFrame_OnEvent(self, event, arg1)
+function ClassicHealPredictionFrame_OnEvent(self, event, arg1)
     if event == "ADDON_LOADED" and arg1 == ADDON_NAME then
         if not _G.ClassicHealPredictionSettings then
             _G.ClassicHealPredictionSettings = {}
@@ -1438,9 +1460,8 @@ local function ClassicHealPredictionFrame_OnEvent(self, event, arg1)
     end
 end
 
-_G.ClassicHealPredictionFrame_OnEvent = ClassicHealPredictionFrame_OnEvent
 
-local function ClassicHealPredictionFrame_Default()
+function ClassicHealPredictionFrame_Default()
     wipe(ClassicHealPredictionSettings)
     wipe(_G.ClassicHealPredictionSettings)
 
@@ -1457,7 +1478,7 @@ end
 
 _G.ClassicHealPredictionFrame_Default = ClassicHealPredictionFrame_Default
 
-local function ClassicHealPredictionFrame_Okay()
+function ClassicHealPredictionFrame_Okay()
     wipe(_G.ClassicHealPredictionSettings)
 
     for k, v in pairs(ClassicHealPredictionSettings) do
@@ -1469,7 +1490,7 @@ end
 
 _G.ClassicHealPredictionFrame_Okay = ClassicHealPredictionFrame_Okay
 
-local function ClassicHealPredictionFrame_Cancel()
+function ClassicHealPredictionFrame_Cancel()
     wipe(ClassicHealPredictionSettings)
 
     for k, v in pairs(_G.ClassicHealPredictionSettings) do
@@ -1481,7 +1502,8 @@ end
 
 _G.ClassicHealPredictionFrame_Cancel = ClassicHealPredictionFrame_Cancel
 
-local function ClassicHealPredictionFrame_OnLoad(self)
+function ClassicHealPredictionFrame_OnLoad(self)
+	print("OnLoad Triggerd")
     self:RegisterEvent("ADDON_LOADED")
 
     local frame = CreateFrame("Frame")
@@ -1951,7 +1973,7 @@ local function ClassicHealPredictionFrame_OnLoad(self)
     loadedFrame = true
 end
 
-_G.ClassicHealPredictionFrame_OnLoad = ClassicHealPredictionFrame_OnLoad
+
 
 do
     local healComm = {}
@@ -2023,3 +2045,9 @@ do
     HealComm.RegisterCallback(healComm, "HealComm_ModifierChanged")
     HealComm.RegisterCallback(healComm, "HealComm_GUIDDisappeared", "HealComm_ModifierChanged")
 end
+
+
+
+
+
+
