@@ -1503,7 +1503,6 @@ end
 _G.ClassicHealPredictionFrame_Cancel = ClassicHealPredictionFrame_Cancel
 
 function ClassicHealPredictionFrame_OnLoad(self)
-	print("OnLoad Triggerd")
     self:RegisterEvent("ADDON_LOADED")
 
     local frame = CreateFrame("Frame")
